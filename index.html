@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的三餐 & 日记</title>
+  <style>
+    :root {
+      --bg: #0b1220; /* 深色背景 */
+      --panel: #111a2b;
+      --muted: #7a869a;
+      --text: #eaf0ff;
+      --accent: #6aa6ff;
+      --accent-2: #90e0ef;
+      --danger: #ff6b6b;
+      --ok: #4ade80;
+      --border: #223049;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 600px at 10% -10%, #142035, #0b1220 60% 100%);
+      color: var(--text); line-height: 1.5;
+    }
+    .wrap { max-width: 1120px; margin: 24px auto 80px; padding: 0 16px; }
+    header {
+      display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; margin-bottom: 16px;
+    }
+    .title { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+    .muted { color: var(--muted); }
+    .row { display: grid; gap: 14px; grid-template-columns: repeat(12, 1fr); }
+    .card { grid-column: span 12; background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+    .card h3 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
+    textarea, input[type="text"], input[type="date"] { width: 100%; background: #0e1727; border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 10px 12px; outline: none; box-shadow: inset 0 0 0 1px transparent; transition: .15s ease; }
+    textarea:focus, input:focus { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+    textarea { min-height: 130px; resize: vertical; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display:grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .btn { appearance: none; border: 1px solid var(--border); background: #0f1a2d; color: var(--text); padding: 10px 14px; border-radius: 12px; cursor: pointer; transition: .15s; font-weight: 600; }
+    .btn:hover { border-color: var(--accent); color: white; }
+    .btn.primary { background: linear-gradient(180deg, #377dff, #1f60ee); border-color: #1e4fd9; box-shadow: 0 10px 25px rgba(55,125,255,.25); }
+    .btn.primary:hover { filter: brightness(1.1); }
+    .btn.danger { background: linear-gradient(180deg, #ff6b6b, #e25555); border-color: #e25555; }
+    .toolbar { position: sticky; top: 8px; display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+    .two { grid-column: span 12; }
+    @media (min-width: 900px) { .two { grid-column: span 6; } }
+    aside.history { position: sticky; top: 8px; background: #0c1528; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; max-height: 70vh; overflow: auto; }
+    .history h4 { margin: 0 0 8px; font-size: 14px; }
+    .history button { width: 100%; text-align: left; background: transparent; border: 1px solid transparent; color: var(--text); padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+    .history button:hover { background: rgba(255,255,255,.06); border-color: var(--border); }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#13223b; border:1px solid var(--border); color:var(--muted); font-size:12px; }
+    .footer { margin-top: 16px; display:flex; flex-wrap:wrap; gap: 8px; align-items:center; }
+    .hint { font-size: 12px; color: var(--muted); }
+    .ok { color: var(--ok); font-weight: 700; }
+    .export-box { display:grid; gap:8px; grid-template-columns: 1fr auto auto; align-items:center; }
+    .checkbox { display:flex; gap:8px; align-items:center; }
+    .copy-out { width: 100%; min-height: 160px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">我的三餐 · 早饮 · 日记 <span class="muted">（本地离线保存）</span></div>
+      <input id="date" type="date" />
+      <div class="toolbar">
+        <button class="btn primary" id="saveBtn">保存 (Ctrl+S)</button>
+        <button class="btn" id="newBtn">今天</button>
+      </div>
+    </header>
+
+    <div class="row" style="margin-bottom:10px">
+      <div class="two card">
+        <h3>三餐</h3>
+        <div class="grid-3">
+          <div>
+            <label class="muted">早餐</label>
+            <input id="breakfast" type="text" placeholder="例如：鸡蛋、面包、牛奶" />
+          </div>
+          <div>
+            <label class="muted">午餐</label>
+            <input id="lunch" type="text" placeholder="例如：米饭 + 蔬菜 + 鸡胸肉" />
+          </div>
+          <div>
+            <label class="muted">晚餐</label>
+            <input id="dinner" type="text" placeholder="例如：清粥小菜 / 水果" />
+          </div>
+        </div>
+        <div style="margin-top:10px" class="grid-2">
+          <div>
+            <label class="muted">早上喝了什么</label>
+            <input id="morningDrink" type="text" placeholder="例如：春拂焙茶 / 咖啡 / 温水" />
+          </div>
+          <div>
+            <label class="muted">其他补充（可选）</label>
+            <input id="extra" type="text" placeholder="例如：零食 / 运动 / 体重…" />
+          </div>
+        </div>
+      </div>
+
+      <div class="two card">
+        <h3>日记 & 想法</h3>
+        <textarea id="diary" placeholder="今天心情、灵感、计划……"></textarea>
+        <div class="footer">
+          <span class="hint">内容自动保存到浏览器本地存储（localStorage）。</span>
+          <span id="status" class="pill">未修改</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="two card">
+        <h3>导出 · 备份</h3>
+        <div class="export-box">
+          <div class="checkbox"><input type="checkbox" id="onlyText" /> <label for="onlyText">仅导出连续正文（不含标签）</label></div>
+          <button class="btn" id="copyBtn">复制到剪贴板</button>
+          <button class="btn" id="downloadBtn">下载 .txt</button>
+        </div>
+        <div class="grid-2" style="margin-top:8px">
+          <div>
+            <label class="muted">导出范围（起）</label>
+            <input type="date" id="rangeStart" />
+          </div>
+          <div>
+            <label class="muted">导出范围（止）</label>
+            <input type="date" id="rangeEnd" />
+          </div>
+        </div>
+        <textarea id="exportOut" class="copy-out" readonly placeholder="点击上方按钮生成导出内容"></textarea>
+        <div class="footer">
+          <button class="btn" id="genBtn">生成导出内容</button>
+          <button class="btn" id="backupBtn">导出 JSON 备份</button>
+          <input type="file" id="restoreFile" style="display:none" accept="application/json" />
+          <button class="btn" id="restoreBtn">从 JSON 还原</button>
+        </div>
+      </div>
+
+      <aside class="two history">
+        <h4>历史记录</h4>
+        <div id="historyList"></div>
+        <div class="footer">
+          <button class="btn danger" id="deleteDay">删除当天</button>
+          <button class="btn" id="clearAll">清空全部</button>
+        </div>
+        <div class="hint" style="margin-top:6px">提示：删除或清空仅影响本地浏览器，不会上传网络。</div>
+      </aside>
+    </div>
+
+  </div>
+
+  <script>
+  // ========= 数据层 =========
+  const KEY = 'meal-diary-v1';
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  const todayStr = () => new Date().toISOString().slice(0,10);
+  const pad = n => String(n).padStart(2,'0');
+
+  function getStore(){
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function setStore(data){ localStorage.setItem(KEY, JSON.stringify(data)); }
+  function getDay(date){ return getStore()[date] || null; }
+  function setDay(date, obj){ const db = getStore(); db[date] = { ...obj, updatedAt: new Date().toISOString() }; setStore(db); }
+  function deleteDay(date){ const db = getStore(); delete db[date]; setStore(db); }
+
+  // ========= UI 逻辑 =========
+  const dateI = $('#date');
+  const fields = ['breakfast','lunch','dinner','morningDrink','extra','diary'];
+  const inputs = Object.fromEntries(fields.map(id => [id, $('#'+id)]));
+  const status = $('#status');
+
+  function fill(date){
+    const d = getDay(date) || {};
+    fields.forEach(k => inputs[k].value = d[k] || '');
+    status.textContent = d.updatedAt ? '已加载 ' + new Date(d.updatedAt).toLocaleString() : '新建';
+    renderHistory();
+  }
+
+  function gather(){
+    const o = {}; fields.forEach(k => o[k] = inputs[k].value.trim()); return o;
+  }
+
+  function save(){
+    const date = dateI.value || todayStr();
+    setDay(date, gather());
+    status.textContent = '已保存 · ' + new Date().toLocaleTimeString();
+    status.classList.add('ok'); setTimeout(()=>status.classList.remove('ok'), 1200);
+    renderHistory();
+  }
+
+  function renderHistory(){
+    const list = $('#historyList');
+    const db = getStore();
+    const dates = Object.keys(db).sort((a,b)=> a<b?1:-1);
+    list.innerHTML = '';
+    dates.forEach(d => {
+      const btn = document.createElement('button');
+      btn.textContent = d + (d === dateI.value ? '  · 当前' : '');
+      btn.onclick = ()=>{ dateI.value = d; fill(d); };
+      list.appendChild(btn);
+    });
+    if(dates.length===0){ list.innerHTML = '<div class="muted">暂无记录</div>'; }
+  }
+
+  function generateExport(){
+    const start = $('#rangeStart').value || '0000-01-01';
+    const end   = $('#rangeEnd').value   || '9999-12-31';
+    const onlyText = $('#onlyText').checked;
+    const db = getStore();
+    const dates = Object.keys(db).filter(d => d>=start && d<=end).sort();
+    let lines = [];
+    dates.forEach(d => {
+      const o = db[d];
+      if(!onlyText){ lines.push(`# ${d}`); }
+      if(o.breakfast) lines.push(onlyText?`${d} 早餐 ${o.breakfast}`:`- 早餐：${o.breakfast}`);
+      if(o.lunch)     lines.push(onlyText?`${d} 午餐 ${o.lunch}`:`- 午餐：${o.lunch}`);
+      if(o.dinner)    lines.push(onlyText?`${d} 晚餐 ${o.dinner}`:`- 晚餐：${o.dinner}`);
+      if(o.morningDrink) lines.push(onlyText?`${d} 早上喝了 ${o.morningDrink}`:`- 早上喝了：${o.morningDrink}`);
+      if(o.extra)     lines.push(onlyText?`${d} 其他 ${o.extra}`:`- 其他：${o.extra}`);
+      if(o.diary)     lines.push(onlyText?`${d} ${o.diary}`:`\n${o.diary}`);
+      if(!onlyText) lines.push('');
+    });
+    const text = lines.join('\n').trim();
+    $('#exportOut').value = text || '（所选范围内暂无数据）';
+    return { text, count: dates.length };
+  }
+
+  function copyText(){ const {text} = generateExport(); if(!text) return; navigator.clipboard.writeText(text); alert('已复制到剪贴板'); }
+  function downloadText(){ const {text} = generateExport(); if(!text) return; const blob = new Blob([text], {type:'text/plain;charset=utf-8'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `导出_${($('#rangeStart').value||'all')}_${($('#rangeEnd').value||'all')}.txt`; a.click(); URL.revokeObjectURL(a.href); }
+
+  function backup(){ const blob = new Blob([localStorage.getItem(KEY)||'{}'], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'meal-diary-backup.json'; a.click(); URL.revokeObjectURL(a.href); }
+  function restore(file){ const r = new FileReader(); r.onload = ()=>{ try{ setStore(JSON.parse(r.result)); fill(dateI.value); alert('已还原'); }catch(e){ alert('JSON 无法解析'); } }; r.readAsText(file, 'utf-8'); }
+
+  // ========= 事件绑定 =========
+  dateI.value = todayStr(); fill(dateI.value);
+  $('#newBtn').onclick = ()=>{ dateI.value = todayStr(); fill(dateI.value); };
+  $('#saveBtn').onclick = save;
+  $('#genBtn').onclick = generateExport;
+  $('#copyBtn').onclick = copyText;
+  $('#downloadBtn').onclick = downloadText;
+  $('#backupBtn').onclick = backup;
+  $('#restoreBtn').onclick = ()=> $('#restoreFile').click();
+  $('#restoreFile').addEventListener('change', e => e.target.files[0] && restore(e.target.files[0]));
+  $('#deleteDay').onclick = ()=>{ if(confirm('确定删除当天记录吗？')){ deleteDay(dateI.value); fill(dateI.value); } };
+  $('#clearAll').onclick = ()=>{ if(confirm('确定清空全部记录吗？此操作无法撤销。')){ localStorage.removeItem(KEY); renderHistory(); alert('已清空'); } };
+
+  // 输入自动保存（防丢）
+  let timer = null;
+  fields.forEach(k => {
+    inputs[k].addEventListener('input', ()=>{
+      status.textContent = '未保存修改…';
+      clearTimeout(timer); timer = setTimeout(save, 600);
+    });
+  });
+
+  // 快捷键
+  window.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); save(); }
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){ e.preventDefault(); generateExport(); }
+  });
+  </script>
+</body>
+</html>
